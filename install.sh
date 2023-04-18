@@ -527,7 +527,8 @@ echo -e "
 #                                                          #  
 #                   Agecom Telecomunicações                #
 #                    Nao modificar o script                #
-#                          V1.0.0.1                        #
+#                          V1.0.0.1			   #	
+#	Autor:${github.event.commits[0].author.name}	   #
 ############################################################
 "
 case "$1" in
