@@ -527,7 +527,7 @@ echo -e "
 #                                                          #  
 #                   Agecom Telecomunicações                #
 #                    Nao modificar o script                #
-#                                                          #
+#                          V1.0.0.1                        #
 ############################################################
 "
 case "$1" in
