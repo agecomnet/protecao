@@ -33,7 +33,8 @@ ALTER SCHEMA public OWNER TO postgres;
 -- Name: nserv_result; Type: TYPE; Schema: public; Owner: gravador
 --
 
-CREATE TYPE public.nserv_result AS (
+CREATE TYPE public.nserv_result AS
+(
 	atendidas bigint,
 	natendidas bigint,
 	o_serv double precision,
@@ -374,9 +375,15 @@ ALTER FUNCTION public.insert_contact_whatsapp(_numero text, _name text) OWNER TO
 -- Name: n_serv(timestamp without time zone, timestamp without time zone, text); Type: FUNCTION; Schema: public; Owner: gravador
 --
 
-CREATE FUNCTION public.n_serv(timestamp without time zone, timestamp without time zone, text) RETURNS public.nserv_result
-    LANGUAGE sql
-    AS $_$
+CREATE OR REPLACE FUNCTION public.n_serv(
+	timestamp without time zone,
+	timestamp without time zone,
+	text)
+    RETURNS nserv_result
+    LANGUAGE 'sql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
 select
 sum(COALESCE(case when modo='UV' and atendida = true then 1 else 0 end,0)) as atendidas,
 sum(case when date_end is not null and agente_start is null and modo='UV' and atendida = False then 1 else 0 end) as natendidas,
@@ -390,7 +397,7 @@ cast(sum(case when modo='UV' then 1 else 0 end)as float) as tot_chamadas,
 from tb_chamadas 
 left join tb_virtual_groups on tb_virtual_groups.virtual_group = tb_chamadas.virtual_group  
 where acd_start between $1 and $2 and tb_chamadas.virtual_group = $3 group by tb_chamadas.virtual_group
-$_$;
+$BODY$;
 
 
 ALTER FUNCTION public.n_serv(timestamp without time zone, timestamp without time zone, text) OWNER TO gravador;
