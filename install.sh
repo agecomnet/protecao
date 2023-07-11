@@ -395,7 +395,6 @@ setiptablesfile()
 	echo -e "-A INPUT -s 18.231.140.201 -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "-A INPUT -s 189.19.223.154 -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "-A INPUT -s 179.110.69.59 -j ACCEPT" >> /etc/sysconfig/iptables
-	echo -e "-A INPUT -s djchacalap.ddns.net -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "# Inicio da area para liberacao de IPs personalizados" >> /etc/sysconfig/iptables
 	echo -e "# Fim da area para liberacao de IPs personalizados" >> /etc/sysconfig/iptables
 	echo -e "#               Portas dos servicos" >> /etc/sysconfig/iptables
