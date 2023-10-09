@@ -14,7 +14,54 @@ usage() {
 	echo "Use: $0 monitor             Instala o monitor de clientes."
 	echo "Use: $0 installdeps         Instalar os pacotes necessarios para fail2ban. (Já foi executado durenate a instalação)"
 	echo "Use: $0 configsegurancafpbx Configura protecoes FREEPBX. (Já foi executado durenate a instalação)"
+	echo "Use: $0 installagidnis      Instala AGI DNIS" 
 	echo "Use: $0 clean               Efetua a limpeza dos arquivos temporarios e instaladores"
+}
+installagidnis()
+{
+	set +e
+	rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
+	yum install dotnet-runtime-7.0 -y
+	yum install aspnetcore-runtime-7.0 -y
+	mkdir -p /var/lib/asterisk/sounds/tts/
+	mkdir -p /var/www/html/stt/
+	mkdir -p /var/agecom/callroutingagi/
+	cp -f /protecao/agi/dnis/*.dll /var/agecom/callroutingagi/
+	cp -f /protecao/agi/dnis/*.json /var/agecom/callroutingagi/
+	cp -f /protecao/agi/dnis/*.pdb /var/agecom/callroutingagi/
+	cp -f /protecao/agi/dnis/sounds/*.wav /var/lib/asterisk/sounds/
+	cp -f /protecao/agi/dnis/sounds/*.mp3 /var/lib/asterisk/sounds/
+	cp -Rf /protecao/agi/dnis/sounds/moh/ /var/lib/asterisk/moh/
+chown -R asterisk:asterisk /var/lib/asterisk/sounds/tts/
+chown -R asterisk:asterisk /var/www/html/stt/
+chown -R asterisk:asterisk /protecao/agi/dnis/sounds/moh/
+
+echo -e "[Unit]" > /usr/lib/systemd/system/agidnis.service
+echo -e "Description=AGI Callrouting" >> /usr/lib/systemd/system/agidnis.service
+echo -e "After=httpd.service" >> /usr/lib/systemd/system/agidnis.service
+
+echo -e "[Service]" >> /usr/lib/systemd/system/agidnis.service
+echo -e "WorkingDirectory=/root/net6.0" >> /usr/lib/systemd/system/agidnis.service
+echo -e "Type=simple" >> /usr/lib/systemd/system/agidnis.service
+echo -e "User=root" >> /usr/lib/systemd/system/agidnis.service
+echo -e "ExecStart=/usr/bin/dotnet /root/net6.0/CallroutingAgiRoutingDNIS.dll" >> /usr/lib/systemd/system/agidnis.service
+echo -e "Restart=always" >> /usr/lib/systemd/system/agidnis.service
+echo -e "RestartSec=5" >> /usr/lib/systemd/system/agidnis.service
+echo -e "ExecReload=/bin/kill -HUP $MAINPID" >> /usr/lib/systemd/system/agidnis.service
+echo -e "" >> /usr/lib/systemd/system/agidnis.service
+echo -e "" >> /usr/lib/systemd/system/agidnis.service
+echo -e "[Install]" >> /usr/lib/systemd/system/agidnis.service
+echo -e "WantedBy=multi-user.target" >> /usr/lib/systemd/system/agidnis.service
+
+echo -e "[typing]" >> /etc/asterisk/musiconhold_custom.conf
+echo -e "mode=files" >> /etc/asterisk/musiconhold_custom.conf
+echo -e "sort=alpha" >> /etc/asterisk/musiconhold_custom.conf
+echo -e "directory => /var/lib/asterisk/moh/typing" >> /etc/asterisk/musiconhold_custom.conf
+
+systemctl enable agidnis.service
+systemctl start agidnis.service
+set -e
+
 }
 cleansys()
 {
