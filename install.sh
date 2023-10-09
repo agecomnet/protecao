@@ -292,7 +292,7 @@ systemctl enable postgresql-16
 systemctl start postgresql-16
 #dnf -y module enable postgresql:13
 #dnf -y install postgresql-*
-#dnf -y install mono-complete mc
+dnf -y install mono-complete mc
 echo -e "nice -n 10 /usr/local/bin/lame --preset phone -h -m m /var/spool/asterisk/monitor/\$1" > /usr/lib/asterisk/conv_mp3.sh
 echo -e "rm -f /var/spool/asterisk/monitor/\$1" >> /usr/lib/asterisk/conv_mp3.sh
 chmod 777 /usr/lib/asterisk/conv_mp3.sh
