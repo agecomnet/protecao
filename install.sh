@@ -31,7 +31,7 @@ installagidnis()
 	cp -f /protecao/agi/dnis/*.pdb /var/agecom/callroutingagi/
 	cp -f /protecao/agi/dnis/sounds/*.wav /var/lib/asterisk/sounds/
 	cp -f /protecao/agi/dnis/sounds/*.mp3 /var/lib/asterisk/sounds/
-	cp -Rf /protecao/agi/dnis/sounds/moh/ /var/lib/asterisk/moh/
+	cp -Rf /protecao/agi/dnis/sounds/moh /var/lib/asterisk/
 chown -R asterisk:asterisk /var/lib/asterisk/sounds/tts/
 chown -R asterisk:asterisk /var/www/html/stt/
 chown -R asterisk:asterisk /protecao/agi/dnis/sounds/moh/
@@ -605,6 +605,9 @@ case "$1" in
 		;;
 	clean)
 		cleansys
+		;;
+	installagidnis)
+		installagidnis
 		;;
 	'')
 		usage
