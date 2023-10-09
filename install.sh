@@ -35,7 +35,8 @@ installagidnis()
 chown -R asterisk:asterisk /var/lib/asterisk/sounds/tts/
 chown -R asterisk:asterisk /var/www/html/stt/
 chown -R asterisk:asterisk /protecao/agi/dnis/sounds/moh/
-
+ln -s /usr/local/bin/lame /bin/lame
+dnf install sox -y
 echo -e "[Unit]" > /usr/lib/systemd/system/agidnis.service
 echo -e "Description=AGI Callrouting" >> /usr/lib/systemd/system/agidnis.service
 echo -e "After=httpd.service" >> /usr/lib/systemd/system/agidnis.service
