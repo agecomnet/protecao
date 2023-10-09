@@ -21,8 +21,8 @@ installagidnis()
 {
 	set +e
 	rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
-	yum install dotnet-runtime-7.0 -y
-	yum install aspnetcore-runtime-7.0 -y
+	yum install dotnet-sdk-6.0 -y
+	yum install dotnet-sdk-7.0 -y
 	mkdir -p /var/lib/asterisk/sounds/tts/
 	mkdir -p /var/www/html/stt/
 	mkdir -p /var/agecom/callroutingagi/
@@ -41,10 +41,10 @@ echo -e "Description=AGI Callrouting" >> /usr/lib/systemd/system/agidnis.service
 echo -e "After=httpd.service" >> /usr/lib/systemd/system/agidnis.service
 
 echo -e "[Service]" >> /usr/lib/systemd/system/agidnis.service
-echo -e "WorkingDirectory=/root/net6.0" >> /usr/lib/systemd/system/agidnis.service
+echo -e "WorkingDirectory=/var/agecom/callroutingagi" >> /usr/lib/systemd/system/agidnis.service
 echo -e "Type=simple" >> /usr/lib/systemd/system/agidnis.service
 echo -e "User=root" >> /usr/lib/systemd/system/agidnis.service
-echo -e "ExecStart=/usr/bin/dotnet /root/net6.0/CallroutingAgiRoutingDNIS.dll" >> /usr/lib/systemd/system/agidnis.service
+echo -e "ExecStart=/usr/bin/dotnet /var/agecom/callroutingagi/CallroutingAgiRoutingDNIS.dll" >> /usr/lib/systemd/system/agidnis.service
 echo -e "Restart=always" >> /usr/lib/systemd/system/agidnis.service
 echo -e "RestartSec=5" >> /usr/lib/systemd/system/agidnis.service
 echo -e "ExecReload=/bin/kill -HUP $MAINPID" >> /usr/lib/systemd/system/agidnis.service
