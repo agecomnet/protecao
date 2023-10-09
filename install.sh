@@ -283,9 +283,16 @@ set -e
 
 installcr()
 {
-dnf -y module enable postgresql:13
-dnf -y install postgresql-*
-dnf -y install mono-complete mc
+dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+dnf -qy module disable postgresql
+dnf install -y postgresql16-server
+dnf install -y postgresql16-contrib
+/usr/pgsql-16/bin/postgresql-16-setup initdb
+systemctl enable postgresql-16
+systemctl start postgresql-16
+#dnf -y module enable postgresql:13
+#dnf -y install postgresql-*
+#dnf -y install mono-complete mc
 echo -e "nice -n 10 /usr/local/bin/lame --preset phone -h -m m /var/spool/asterisk/monitor/\$1" > /usr/lib/asterisk/conv_mp3.sh
 echo -e "rm -f /var/spool/asterisk/monitor/\$1" >> /usr/lib/asterisk/conv_mp3.sh
 chmod 777 /usr/lib/asterisk/conv_mp3.sh
@@ -298,11 +305,11 @@ su -c "psql -d postgres -c \"CREATE ROLE gravador LOGIN ENCRYPTED PASSWORD 'md56
 su -c "psql -d postgres -c \"CREATE DATABASE callpro WITH OWNER = gravador ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'pt_BR.UTF-8' LC_CTYPE = 'pt_BR.UTF-8' CONNECTION LIMIT = -1;\"" postgres
 su -c "psql -d postgres -c \"CREATE DATABASE gravador WITH OWNER = gravador ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'pt_BR.UTF-8' LC_CTYPE = 'pt_BR.UTF-8' CONNECTION LIMIT = -1;\"" postgres
 
-sed -i 's/\(^#port\).*/\port = 5432/' /var/lib/pgsql/data/postgresql.conf
-sed -i 's/\(^max_connections\).*/\max_connections = 1000/' /var/lib/pgsql/data/postgresql.conf
+sed -i 's/\(^#port\).*/\port = 5432/' /var/lib/pgsql/16/data/postgresql.conf
+sed -i 's/\(^max_connections\).*/\max_connections = 1000/' /var/lib/pgsql/16/data/postgresql.conf
 export listen_addresses="listen_addresses = '*'"
-sed -i "s/#listen_addresses.*/$listen_addresses/" /var/lib/pgsql/data/postgresql.conf
-sed -i '83 i\host    all             all             0.0.0.0 0.0.0.0         md5' /var/lib/pgsql/data/pg_hba.conf
+sed -i "s/#listen_addresses.*/$listen_addresses/" /var/lib/pgsql/16/data/postgresql.conf
+sed -i '83 i\host    all             all             0.0.0.0 0.0.0.0         md5' /var/lib/pgsql/16/data/pg_hba.conf
 tar -xvzf adds/asterisk.tar.gz -C /
 asterisk -rx 'core restart now'
 runuser -l postgres -c "psql callpro < /protecao/SQL/callpro.sql"
@@ -348,7 +355,7 @@ echo -e [Install]>> /etc/systemd/system/callroute.service
 echo -e WantedBy=multi-user.target>> /etc/systemd/system/callroute.service
 systemctl enable callroute.service
 systemctl start callroute.service
-systemctl restart postgresql
+systemctl restart postgresql-16
 cp -f /usr/local/bin/lame /var/agecom/callroute/lame.exe
 
 }
