@@ -296,9 +296,9 @@ systemctl start postgresql-16
 echo -e "nice -n 10 /usr/local/bin/lame --preset phone -h -m m /var/spool/asterisk/monitor/\$1" > /usr/lib/asterisk/conv_mp3.sh
 echo -e "rm -f /var/spool/asterisk/monitor/\$1" >> /usr/lib/asterisk/conv_mp3.sh
 chmod 777 /usr/lib/asterisk/conv_mp3.sh
-postgresql-setup --initdb
-systemctl start postgresql
-systemctl enable postgresql
+#postgresql-setup --initdb
+#systemctl start postgresql
+#systemctl enable postgresql
 
 su -c "psql -d postgres -c \"CREATE ROLE callproadmin LOGIN ENCRYPTED PASSWORD 'md590dd535ee60b5c53be83ce36915873e2' SUPERUSER INHERIT NOCREATEDB NOCREATEROLE REPLICATION;\"" postgres
 su -c "psql -d postgres -c \"CREATE ROLE gravador LOGIN ENCRYPTED PASSWORD 'md56c7506e8717c4c44786600be925f2bc3' SUPERUSER NOINHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;\"" postgres
