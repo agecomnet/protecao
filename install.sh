@@ -111,7 +111,7 @@ sysprep()
         dnf -y install https://rpms.remirepo.net/enterprise/remi-release-$centosversion.rpm
         dnf -y module disable php
         dnf -y module enable php:remi-7.4
-        dnf install -y php php-pdo php-mysqlnd php-mbstring php-pear php-process php-xml php-opcache php-ldap php-intl php-soap php-json
+        dnf install -y openssh-server php php-pdo php-mysqlnd php-mbstring php-pear php-process php-xml php-opcache php-ldap php-intl php-soap php-json
         dnf install -y https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.32-1.el8.x86_64.rpm
 #       dnf install https://rpmfind.net/linux/centos/$centosversion-stream/AppStream/x86_64/os/Packages/mariadb-connector-odbc-3.1.12-1.el8.x86_64.rpm
         dnf -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-$centosversion.noarch.rpm
@@ -127,7 +127,9 @@ else
 fi
 installdeps
 set +e
-        systemctl stop firewalld
+        systemctl start sshd
+	systemctl enable sshd
+	systemctl stop firewalld
 	systemctl disable firewalld
         dnf remove firewalld -y
 	systemctl enable mariadb
@@ -442,7 +444,7 @@ setiptablesfile()
 	echo -e "-A INPUT -s 192.168.0.0/16 -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "-A INPUT -s 172.16.0.0/16 -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "-A INPUT -s 10.0.0.0/8 -j ACCEPT" >> /etc/sysconfig/iptables
-	echo -e "-A INPUT -s 200.204.160.206 -j ACCEPT" >> /etc/sysconfig/iptables
+	echo -e "-A INPUT -s 179.110.69.216 -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "-A INPUT -s 200.49.34.48/29 -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "-A INPUT -s 189.126.200.240/28 -j ACCEPT" >> /etc/sysconfig/iptables
 	echo -e "-A INPUT -s 200.155.163.48/29 -j ACCEPT" >> /etc/sysconfig/iptables
