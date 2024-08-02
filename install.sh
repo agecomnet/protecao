@@ -100,6 +100,7 @@ sysprep()
 	localectl set-locale LANG=pt_BR.UTF-8
         dnf -y install epel-release 
         dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
+	dnf -y install https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-$(rpm -E %rhel).noarch.rpm
         dnf -y install dnf-plugins-core mc mlocate esmtp-local-delivery
         if [ $centosversion -eq "8" ] ; then
                         yum config-manager --set-enabled powertools
@@ -123,11 +124,10 @@ sysprep()
 if [ $centosversion -eq "9" ] ; then
         dnf -y install https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
         dnf -y install https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-9.noarch.rpm
-else
-        dnf -y install ffmpeg
 fi
 installdeps
 set +e
+        dnf -y install ffmpeg
         dnf -y install sox
 	dnf -y install ffmpeg
         systemctl start sshd
