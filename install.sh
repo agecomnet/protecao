@@ -267,7 +267,7 @@ fwconsole setting TIMEFORMAT "24 Hour Format"
 fwconsole setting TONEZONE br
 fwconsole setting ASTSIPDRIVER both
 
-mysqladmin -u root password 'Agecom20402040'
+mariadb-admin -u root password 'Agecom20402040'
 configsegurancafpbx Agecom20402040
 echo -e "[Unit]" > /usr/lib/systemd/system/freepbx.service
 echo -e "Description=IPBX VoIP Server" >> /usr/lib/systemd/system/freepbx.service
@@ -405,19 +405,19 @@ configfreepbxf2b()
 {
 	read -p "Digite a senha do MYSQL? " mysqlpass
 	/usr/sbin/fwconsole ma downloadinstall logfiles
-	/usr/bin/mysql -p$mysqlpass asterisk << EOF
+	/usr/bin/mariadb -p$mysqlpass asterisk << EOF
 INSERT logfile_logfiles (name,permanent,readonly,disabled,debug,dtmf,error,fax,notice,verbose,warning,security) values ('security','0','0','0','off','off','off','off','off','off','off','on');
 EOF
 /usr/sbin/fwconsole r
 }
 configsegurancafpbx()
 {
-mysql -pAgecom20402040 asterisk << EOF
+mariadb -pAgecom20402040 asterisk << EOF
 update asterisk.featurecodes set enabled='0',defaultcode=' ',customcode=' ' where featurename='blindxfer'; update soundlang_settings set value='g722,g729,ulaw' where keyword='formats';update soundlang_settings set value= 'pt_BR' where keyword='language'; insert into soundlang_customlangs (language,description) values ('pt_BR','Brazil');update sipsettings set data='5588' where keyword='bindport';update sipsettings set data='5589' where keyword='tlsbindport';
 EOF
 cp -Rf /protecao/asterisk/sounds/* /var/lib/asterisk/sounds/
 
-mysql -pAgecom20402040 asteriskcdrdb < /protecao/SQL/freepbx.sql
+mariadb -pAgecom20402040 asteriskcdrdb < /protecao/SQL/freepbx.sql
 }
 setdosasynprotection()
 {
