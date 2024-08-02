@@ -3,7 +3,7 @@ set -e
 
 usage() {
 	echo "$0: configura e instala as dependencias de seguranca e monitoria"
-	echo 'Revision: 001'
+	echo 'Revision: 003'
 	echo ""
 	echo "Use: $0:                    Mostrar esta mensagem."
 	echo "Use: $0 sysprep             Prepara o sistema para instalacao do IPBX"
@@ -80,7 +80,7 @@ configrepomariadb()
 # https://mariadb.org/download/
 [mariadb]
 name = MariaDB
-baseurl = https://mirrors.gigenet.com/mariadb/yum/10.6/rhel$centosversion-amd64
+baseurl = https://mirrors.gigenet.com/mariadb/yum/11.5/rhel$(rpm -E %rhel)-amd64
 module_hotfixes=1
 gpgkey=https://mirrors.gigenet.com/mariadb/yum/RPM-GPG-KEY-MariaDB
 gpgcheck=1" > /etc/yum.repos.d/MariaDB.repo
@@ -90,21 +90,23 @@ sysprep()
 	set +e
         sed -i 's/\(^SELINUX=\).*/\SELINUX=disabled/' /etc/sysconfig/selinux
         sed -i 's/\(^SELINUX=\).*/\SELINUX=disabled/' /etc/selinux/config
+	dnf install langpacks-en glibc-all-langpacks -y
+        dnf config-manager --set-enabled crb
 	set -e
         configrepomariadb
         dnf -y upgrade
         timedatectl set-timezone America/Sao_Paulo
 	export LC_ALL=pt_BR.UTF-8
 	localectl set-locale LANG=pt_BR.UTF-8
-        dnf -y install epel-release
-        dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$centosversion.noarch.rpm
+        dnf -y install epel-release 
+        dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
         dnf -y install dnf-plugins-core mc mlocate esmtp-local-delivery
         if [ $centosversion -eq "8" ] ; then
                         yum config-manager --set-enabled powertools
         fi
         dnf -y install lynx tftp-server unixODBC mariadb-server mariadb mariadb-connector-odbc httpd ncurses-devel sendmail sendmail-cf newt-devel libxml2-devel libcurl-devel libtiff-devel gtk2-devel subversion git wget vim sqlite-devel net-tools gnutls-devel texinfo libuuid-devel libedit-devel tar crontabs gcc gcc-c++ openssl-devel openssl-perl openssl-pkcs11 mysql-devel libxslt-devel kernel-devel fail2ban postfix mod_ssl nodejs
-        if [ $centosversion -eq "8" ] ; then
-                        dnf -y install unixODBC-devel libogg-devel libvorbis-devel uuid-devel libtool-ltdl-devel libsrtp-devel libtermcap-devel libtiff-tools
+        if [ $centosversion -ge "8" ] ; then
+                        dnf -y install unixODBC-devel libogg-devel libvorbis-devel uuid-devel libtool-ltdl-devel libsrtp-devel libtiff-tools
         fi
 
         dnf -y remove php*
@@ -114,19 +116,20 @@ sysprep()
         dnf install -y openssh-server php php-pdo php-mysqlnd php-mbstring php-pear php-process php-xml php-opcache php-ldap php-intl php-soap php-json
         dnf install -y https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.32-1.el8.x86_64.rpm
 #       dnf install https://rpmfind.net/linux/centos/$centosversion-stream/AppStream/x86_64/os/Packages/mariadb-connector-odbc-3.1.12-1.el8.x86_64.rpm
-        dnf -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-$centosversion.noarch.rpm
-        dnf -y install https://forensics.cert.org/cert-forensics-tools-release-el$centosversion.rpm
+        dnf -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm
+        dnf -y install https://forensics.cert.org/cert-forensics-tools-release-el$(rpm -E %rhel).rpm
         sed -i 's/\/lib\/libmyodbc5.so/\/lib64\/libmyodbc8a.so/' /etc/odbcinst.ini
         sed -i 's/\/lib64\/libmyodbc5.so/\/lib64\/libmyodbc8a.so/' /etc/odbcinst.ini
 if [ $centosversion -eq "9" ] ; then
         dnf -y install https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
         dnf -y install https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-9.noarch.rpm
-        dnf -y install sox
 else
         dnf -y install ffmpeg
 fi
 installdeps
 set +e
+        dnf -y install sox
+	dnf -y install ffmpeg
         systemctl start sshd
 	systemctl enable sshd
 	systemctl stop firewalld
@@ -286,7 +289,7 @@ set -e
 
 installcr()
 {
-dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-$(rpm -E %rhel)-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 dnf -qy module disable postgresql
 dnf install -y postgresql16-server
 dnf install -y postgresql16-contrib
@@ -319,7 +322,7 @@ runuser -l postgres -c "psql callpro < /protecao/SQL/callpro.sql"
 runuser -l postgres -c "psql gravador < /protecao/SQL/gravador.sql"
 
 cd /usr/src
-wget https://ufpr.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+wget https://downloads.sourceforge.net/lame/lame-3.100.tar.gz
 tar zxvf lame-3.100.tar.gz
 cd lame-3.100
 ./configure
@@ -583,7 +586,7 @@ echo -e "
 #                                                          #  
 #                   Agecom Telecomunicações                #
 #                    Nao modificar o script                #
-#                          V1.0.0.1			   #	
+#                          V1.0.1.0			   #	
 #		   					   #
 ############################################################
 "
