@@ -91,17 +91,18 @@ sysprep()
         sed -i 's/\(^SELINUX=\).*/\SELINUX=disabled/' /etc/sysconfig/selinux
         sed -i 's/\(^SELINUX=\).*/\SELINUX=disabled/' /etc/selinux/config
 	dnf install langpacks-en glibc-all-langpacks -y
-        dnf config-manager --set-enabled crb
+        
 	set -e
         configrepomariadb
         dnf -y upgrade
         timedatectl set-timezone America/Sao_Paulo
 	export LC_ALL=pt_BR.UTF-8
 	localectl set-locale LANG=pt_BR.UTF-8
-        dnf -y install epel-release 
+        dnf -y install epel-release epel-next-release
         dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm
 	dnf -y install https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-$(rpm -E %rhel).noarch.rpm
         dnf -y install dnf-plugins-core mc mlocate esmtp-local-delivery
+	dnf config-manager --set-enabled crb
         if [ $centosversion -eq "8" ] ; then
                         yum config-manager --set-enabled powertools
         fi
