@@ -93,7 +93,8 @@ sysprep()
 	dnf install langpacks-en glibc-all-langpacks -y
         
 	set -e
-        configrepomariadb
+	curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version="mariadb-11.5"
+#        configrepomariadb
         dnf -y upgrade
         timedatectl set-timezone America/Sao_Paulo
 	export LC_ALL=pt_BR.UTF-8
@@ -119,7 +120,7 @@ sysprep()
         dnf install -y https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.32-1.el8.x86_64.rpm
 #       dnf install https://rpmfind.net/linux/centos/$centosversion-stream/AppStream/x86_64/os/Packages/mariadb-connector-odbc-3.1.12-1.el8.x86_64.rpm
         dnf -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm
-        dnf -y install https://forensics.cert.org/cert-forensics-tools-release-el$(rpm -E %rhel).rpm
+#        dnf -y install https://forensics.cert.org/cert-forensics-tools-release-el$(rpm -E %rhel).rpm
         sed -i 's/\/lib\/libmyodbc5.so/\/lib64\/libmyodbc8a.so/' /etc/odbcinst.ini
         sed -i 's/\/lib64\/libmyodbc5.so/\/lib64\/libmyodbc8a.so/' /etc/odbcinst.ini
 if [ $centosversion -eq "9" ] ; then
@@ -208,6 +209,7 @@ contrib/scripts/install_prereq install
 ./configure --with-jansson-bundled --libdir=/usr/lib64
 set +e
 contrib/scripts/get_mp3_source.sh
+make
 make menuselect.makeopt
 menuselect/menuselect --enable cdr_mysql menuselect.makeopts
 menuselect/menuselect --enable app_macro menuselect.makeopts
