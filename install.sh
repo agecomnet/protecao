@@ -288,6 +288,7 @@ systemctl enable freepbx
 systemctl enable httpd
 fwconsole reload
 set -e
+ln -s /usr/lib64/libmyodbc8w.so /usr/lib64/libmyodbc8.so
 }
 
 installcr()
