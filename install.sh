@@ -607,7 +607,9 @@ installnodered() {
 
     echo "==> Instalando módulos adicionais..."
     npm install -g @flowfuse/node-red-dashboard node-red-contrib-contextbrowser node-red-debugger bcryptjs
-
+	node-red --userDir /root/.node-red &
+    sleep 5
+    pkill -f node-red
     echo "==> Ajustando configuração do Node-RED..."
     SETTINGS_FILE="$HOME/.node-red/settings.js"
 
