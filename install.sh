@@ -15,6 +15,7 @@ usage() {
 	echo "Use: $0 installdeps         Instalar os pacotes necessarios para fail2ban. (Já foi executado durenate a instalação)"
 	echo "Use: $0 configsegurancafpbx Configura protecoes FREEPBX. (Já foi executado durenate a instalação)"
 	echo "Use: $0 installagidnis      Instala AGI DNIS" 
+    echo "Use: $0 installnodered      Instala Node Red" 
 	echo "Use: $0 clean               Efetua a limpeza dos arquivos temporarios e instaladores"
 }
 installagidnis()
@@ -579,6 +580,112 @@ configiptables()
 		[Nn]* ) setiptablesfile 0; break;;
 	esac
 }
+installnodered() {
+    echo "==> Verificando Node.js instalado..."
+    if command -v node >/dev/null 2>&1; then
+        NODE_VERSION=$(node -v | sed 's/v//')
+        echo "Node.js encontrado: v$NODE_VERSION"
+    else
+        NODE_VERSION="0.0.0"
+        echo "Node.js não encontrado."
+    fi
+
+    REQUIRED_VERSION="20.0.0"
+    version_lt() { [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" != "$2" ]; }
+
+    if version_lt "$NODE_VERSION" "$REQUIRED_VERSION"; then
+        echo "Atualizando Node.js..."
+        dnf -y remove nodejs || true
+        curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+        dnf -y install nodejs
+    else
+        echo "Node.js já está atualizado (>= $REQUIRED_VERSION)"
+    fi
+
+    echo "==> Instalando Node-RED e PM2..."
+    npm install -g --unsafe-perm node-red pm2
+
+    echo "==> Instalando módulos adicionais..."
+    npm install -g @flowfuse/node-red-dashboard node-red-contrib-contextbrowser node-red-debugger bcryptjs
+
+    echo "==> Ajustando configuração do Node-RED..."
+    SETTINGS_FILE="$HOME/.node-red/settings.js"
+
+    # cria settings.js se não existir
+    mkdir -p "$HOME/.node-red"
+    if [ ! -f "$SETTINGS_FILE" ]; then
+        node-red --settings "$SETTINGS_FILE" --help >/dev/null 2>&1 || true
+    fi
+
+    # patch contextStorage
+    if ! grep -q "contextStorage" "$SETTINGS_FILE"; then
+        sed -i "/module.exports = {/a\    contextStorage: {\n        default: {\n            module:\"localfilesystem\"\n        },\n    }," "$SETTINGS_FILE"
+    fi
+
+    # patch adminAuth
+    if ! grep -q "adminAuth" "$SETTINGS_FILE"; then
+        sed -i "/module.exports = {/a\    adminAuth: {\n        type: \"credentials\",\n        users: [{\n            username: \"agecom\",\n            password: \"\$2b\$08\$KagLCfJgAzK8ubpoSPtBOOEh16Cy0SMGiBziEROqdiCylA1MuhSWO\",\n            permissions: \"*\"\n        }]\n    }," "$SETTINGS_FILE"
+    fi
+
+    echo "==> Configurando Node-RED no PM2..."
+    pm2 start $(which node-red) --name nodered -- -v
+    pm2 save
+    pm2 startup systemd -u $(whoami) --hp $(eval echo ~$USER)
+
+    echo "==> Instalação concluída!"
+    node -v
+    npm -v
+    node-red --version
+    pm2 list
+	
+    echo "==> Chamando configuração do Apache..."
+    configure_apache
+    echo "==> Instalação concluída!"
+}
+configure_apache() {
+    CONF_FILE="/etc/httpd/conf/httpd.conf"
+    BLOCK_START="# >>> Node-RED Reverse Proxy >>>"
+    BLOCK_END="# <<< Node-RED Reverse Proxy <<<"
+
+    BLOCK_CONTENT=$(cat <<'EOF'
+ProxyPreserveHost On
+AllowEncodedSlashes NoDecode
+
+RewriteEngine On
+# redireciona sem barra final
+RewriteRule ^/callroutingivr$ /callroutingivr/ [R=301,L]
+
+# Proxy HTTP normal
+ProxyPass        /callroutingivr/  http://127.0.0.1:1880/ timeout=60
+ProxyPassReverse /callroutingivr/  http://127.0.0.1:1880/
+
+# WebSocket Node-RED
+ProxyPassMatch   ^/callroutingivr/comms/(.*)       ws://127.0.0.1:1880/comms/$1
+ProxyPassReverse ^/callroutingivr/comms/(.*)       ws://127.0.0.1:1880/comms/$1
+
+# WebSocket Dashboard (socket.io)
+ProxyPassMatch   ^/callroutingivr/ui/socket.io/(.*) ws://127.0.0.1:1880/ui/socket.io/$1
+ProxyPassReverse ^/callroutingivr/ui/socket.io/(.*) ws://127.0.0.1:1880/ui/socket.io/$1
+EOF
+)
+
+    echo "==> Configurando Apache em $CONF_FILE ..."
+    if grep -q "$BLOCK_START" "$CONF_FILE"; then
+        echo "Bloco Node-RED já existe, não será duplicado."
+    else
+        {
+            echo ""
+            echo "$BLOCK_START"
+            echo "$BLOCK_CONTENT"
+            echo "$BLOCK_END"
+        } | tee -a "$CONF_FILE" >/dev/null
+        echo "Bloco Node-RED adicionado ao $CONF_FILE"
+    fi
+
+    echo "==> Reiniciando Apache..."
+    systemctl restart httpd
+}
+
 centosversion=`cat /etc/centos-release | tr -dc '0-9.'`
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -590,8 +697,8 @@ echo -e "
 #                                                          #  
 #                   Agecom Telecomunicações                #
 #                    Nao modificar o script                #
-#                          V1.0.1.0			   #	
-#		   					   #
+#                          V1.0.2.0                        #	
+#                                                          #
 ############################################################
 "
 case "$1" in
@@ -626,6 +733,9 @@ case "$1" in
 	installagidnis)
 		installagidnis
 		;;
+  	installnodered)
+   		installnodered
+	 	;;
 	'')
 		usage
 		exit 0
