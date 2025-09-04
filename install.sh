@@ -619,15 +619,39 @@ installnodered() {
         node-red --settings "$SETTINGS_FILE" --help >/dev/null 2>&1 || true
     fi
 
-    # patch contextStorage
-    if ! grep -q "contextStorage" "$SETTINGS_FILE"; then
-        sed -i "/module.exports = {/a\    contextStorage: {\n        default: {\n            module:\"localfilesystem\"\n        },\n    }," "$SETTINGS_FILE"
-    fi
+BACKUP_FILE="/root/.node-red/settings.js.bak.$(date +%F-%H%M)"
 
-    # patch adminAuth
-    if ! grep -q "adminAuth" "$SETTINGS_FILE"; then
-        sed -i "/module.exports = {/a\    adminAuth: {\n        type: \"credentials\",\n        users: [{\n            username: \"agecom\",\n            password: \"\$2b\$08\$KagLCfJgAzK8ubpoSPtBOOEh16Cy0SMGiBziEROqdiCylA1MuhSWO\",\n            permissions: \"*\"\n        }]\n    }," "$SETTINGS_FILE"
-    fi
+echo "==> Fazendo backup de $SETTINGS_FILE em $BACKUP_FILE"
+cp "$SETTINGS_FILE" "$BACKUP_FILE"
+
+# Remove qualquer linha contendo adminAuth ou contextStorage (comentada ou não)
+grep -v "adminAuth" "$BACKUP_FILE" | grep -v "contextStorage" > "$SETTINGS_FILE"
+
+# Agora injeta os blocos novos logo após "module.exports = {"
+awk '
+/module.exports = {/ {
+    print
+    print "    contextStorage: {"
+    print "        default: {"
+    print "            module:\"localfilesystem\""
+    print "        },"
+    print "    },"
+    print ""
+    print "    adminAuth: {"
+    print "        type: \"credentials\","
+    print "        users: [{"
+    print "            username: \"agecom\","
+    print "            password: \"$2b$08$KagLCfJgAzK8ubpoSPtBOOEh16Cy0SMGiBziEROqdiCylA1MuhSWO\","
+    print "            permissions: \"*\""
+    print "        }]"
+    print "    },"
+    next
+}
+{print}
+' "$SETTINGS_FILE" > "${SETTINGS_FILE}.tmp" && mv "${SETTINGS_FILE}.tmp" "$SETTINGS_FILE"
+
+echo "==> Blocos adminAuth e contextStorage aplicados com sucesso!"
+
 
     echo "==> Configurando Node-RED no PM2..."
     pm2 start $(which node-red) --name nodered -- -v
